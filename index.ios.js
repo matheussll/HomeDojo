@@ -1,34 +1,87 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
-
 import React, { Component } from 'react';
 import {
   AppRegistry,
   StyleSheet,
+  ListView,
   Text,
-  View
+  View,
 } from 'react-native';
 
+import CalendarCell from './CalendarCell';
+
+const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+
 export default class HomeDojo extends Component {
+
+  constructor() {
+    super();
+    this.state = {
+      dataSource: ds.cloneWithRows([])
+    };
+}
+
+  consumeService(){
+    fetch('https://private-b9c8e-mock23.apiary-mock.com/api/timeline', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    })
+      .then((response) => response.json())
+      .then((responseJson) => {
+          this.setState({dataSource: ds.cloneWithRows(responseJson)});
+          console.log(this.state.dataSource);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+
+  setDataToText(row){
+
+    switch (row.type) {
+      case "calendar":
+        return <CalendarCell row={row}></CalendarCell>
+        break;
+      case "news":
+        return <Text>notification: {row.message}</Text>
+        break;
+      case "notification":
+        return <Text>notification: {row.message}</Text>
+        break;
+      case "store":
+
+      return <Text>store: {row.from} - {row.to}</Text>
+        break;
+
+      default:
+        return <Text>deu ruim</Text>
+    }
+  }
+
+
+
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.ios.js
-        </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+D or shake for dev menu
-        </Text>
+        <ListView
+        dataSource={this.state.dataSource}
+        renderRow={this.setDataToText}
+      />
       </View>
     );
   }
+
+
+  componentDidMount(){
+
+    console.log("Entrou em componentDidMount");
+    this.consumeService();
+
+  }
+
+
 }
 
 const styles = StyleSheet.create({
@@ -37,6 +90,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+    marginTop: 20
   },
   welcome: {
     fontSize: 20,
@@ -49,5 +103,6 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
 });
+
 
 AppRegistry.registerComponent('HomeDojo', () => HomeDojo);
